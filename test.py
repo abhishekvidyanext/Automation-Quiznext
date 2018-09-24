@@ -3,10 +3,14 @@ import re
 import time
 from appium import webdriver
 
+cwd = os.getcwd()
+cwd = os.path.normpath(cwd)
+cwd = cwd.replace("\\", "/")
+print("path" + cwd)
 driver = webdriver.Remote(
     command_executor='http://127.0.0.1:4723/wd/hub',
     desired_capabilities={
-        'app': os.path.expanduser('C:/Users/abhishekp/vidyanext/quiznext-auto-script/apk/app-x86-release.apk'),
+        'app': os.path.expanduser(cwd + '/apk/app-x86-release.apk'),
         'platformName': 'Android',
         'deviceName': 'Nexus S API 23',
     })
@@ -17,11 +21,27 @@ def selectOptionAndMoveNext():
         correctOption = "/hierarchy/android.widget.FrameLayout/android.widget.LinearLayout/android.widget.FrameLayout/android.widget.FrameLayout/android.view.ViewGroup/android.view.ViewGroup/android.view.ViewGroup/android.view.ViewGroup[2]/android.widget.TextView[4]"
         correctOptionDriverText = driver.find_element_by_xpath(correctOption).text
         correctAnswerIndex = str(int(re.search(r'\d+', correctOptionDriverText).group()) + 1)
+        expandQuestion = '//*[@text="Expand"]'
         time.sleep(2)
+        
         option = "/hierarchy/android.widget.FrameLayout/android.widget.LinearLayout/android.widget.FrameLayout/android.widget.FrameLayout/android.view.ViewGroup/android.view.ViewGroup/android.view.ViewGroup/android.view.ViewGroup[3]/android.support.v4.view.ViewPager/android.view.ViewGroup/android.view.ViewGroup[--index--]"
         option = option.replace("--index--", correctAnswerIndex);
         optionDriver = driver.find_element_by_xpath(option)
-        optionDriver.click()
+
+
+        try:
+            expandOption = "/hierarchy/android.widget.FrameLayout/android.widget.LinearLayout/android.widget.FrameLayout/android.widget.FrameLayout/android.view.ViewGroup/android.view.ViewGroup/android.view.ViewGroup/android.view.ViewGroup[3]/android.support.v4.view.ViewPager/android.view.ViewGroup/android.view.ViewGroup[1]/android.widget.TextView"
+            expandOptionDriver = driver.find_element_by_xpath(expandOption)
+            print("text is" + expandOptionDriver.text)
+            print("expand found")
+            correctAnswerIndex = str(int(correctAnswerIndex) + 1)
+            option = option.replace("--index--", correctAnswerIndex)
+            optionDriver = driver.find_element_by_xpath(option)
+            optionDriver.click()  
+        except:
+            print("expand not found")
+            optionDriver.click()
+            
         time.sleep(0.5)
         check = "/hierarchy/android.widget.FrameLayout/android.widget.LinearLayout/android.widget.FrameLayout/android.widget.FrameLayout/android.view.ViewGroup/android.view.ViewGroup/android.view.ViewGroup/android.view.ViewGroup[4]/android.view.ViewGroup"
         checkDriver = driver.find_element_by_xpath(check)
@@ -70,6 +90,21 @@ def executePracticeQuiz():
         print(loop)
         time.sleep(2)
 
+def executeAllCorrectQuiz():
+    playAgain = '//*[@text="Play Again"]'
+    
+    loop = True
+    while loop:
+        try:
+            el1 = driver.find_element_by_xpath(playAgain)
+            loop = False
+            print("Not in Quiz screen")
+        except:
+            loop = True
+            selectOptionAndMoveNext()
+        print(loop)
+        time.sleep(2)
+    
         
 def init():
     # wait for app to load
@@ -85,9 +120,27 @@ def init():
             executePracticeQuiz()
         except:
             loop = True       
-        print(loop)
+        print("Waiting for quiz..")
         time.sleep(2)
 
-init()        
+def initQuiz():
+    # wait for app to load
+    time.sleep(2)
+
+    loop = True
+    while loop:
+        QuizXPath = '/hierarchy/android.widget.FrameLayout/android.widget.LinearLayout/android.widget.FrameLayout/android.widget.FrameLayout/android.view.ViewGroup/android.view.ViewGroup/android.view.ViewGroup/android.view.ViewGroup[3]/android.support.v4.view.ViewPager/android.view.ViewGroup/android.webkit.WebView/android.webkit.WebView'
+        try:
+            el1 = driver.find_element_by_xpath(QuizXPath)
+            print("quiz is open")
+            executeAllCorrectQuiz()
+        except:
+            loop = True       
+        print("Waiting for quiz..")
+        time.sleep(2)
+
+        
+
+initQuiz()        
 
 
